@@ -34,8 +34,8 @@ def fetch_exercises(exercise_type: str | None = None, difficulty: str | None = N
 def recommend_by_track(track: Track, difficulty: str | None = None, muscle: str | None = None):
     exercises: list[Exercise] = []
 
-    # 30 seconds per set, 10 seconds break
-    exercise_count = math.ceil(track.duration / 40)
+    # 60 seconds per set, 10 seconds break
+    exercise_count = math.ceil(track.duration / 70)
 
     if track.category == "low":
         exercises += fetch_exercises("stretching", difficulty, muscle)
@@ -44,8 +44,8 @@ def recommend_by_track(track: Track, difficulty: str | None = None, muscle: str 
         exercises += fetch_exercises("strength", difficulty, muscle)
         exercises += fetch_exercises("cardio", difficulty, muscle)
 
-        # 90 seconds per set, 10 seconds break
-        exercise_count = math.ceil(track.duration / 100)
+        # 120 seconds per set, 10 seconds break
+        exercise_count = math.ceil(track.duration / 130)
 
     if track.category == "high":
         exercises += fetch_exercises("plyometrics", difficulty, muscle)
