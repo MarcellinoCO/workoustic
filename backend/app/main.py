@@ -50,7 +50,7 @@ async def generate(tracks: str, difficulty: str = "beginner", muscle: str | None
     new_tracks = []
     available_tracks, missing_tracks_id = crud.get_tracks(db, tracks)
     if len(missing_tracks_id) > 0:
-        new_tracks = spotify.fetch_tracks(missing_tracks_id)
+        new_tracks = spotify.analyze_tracks(missing_tracks_id)
         if new_tracks == None:
             raise HTTPException(500, "error when analyzing tracks")
 
@@ -72,7 +72,7 @@ async def generate(tracks: str, difficulty: str = "beginner", muscle: str | None
 
 
 @app.get("/search")
-async def search(queries: str, difficulty: str = "beginner", muscle: str | None = None):
+async def search(queries: str, difficulty: str = "beginner", muscle: str | None = None, db: Session = Depends(get_db)):
     if len(queries) == 0:
         raise HTTPException(400, "parameter queries missing")
 
@@ -88,12 +88,27 @@ async def search(queries: str, difficulty: str = "beginner", muscle: str | None 
     if muscle != None and muscle not in muscles:
         raise HTTPException(400, "parameter muscle invalid")
 
-    tracks = spotify.search_tracks(queries)
-    if len(tracks) == 0:
-        raise HTTPException(
-            status_code=404, detail="search results not found")
+    tracks_ids = spotify.search_tracks(queries)
 
-    exercises = exercise.recommend_by_tracks(tracks, difficulty, muscle)
+    new_tracks = []
+    available_tracks, missing_tracks_id = crud.get_tracks(db, tracks_ids)
+    if len(missing_tracks_id) > 0:
+        new_tracks = spotify.analyze_tracks(missing_tracks_id)
+        if new_tracks == None:
+            raise HTTPException(500, "error when analyzing tracks")
 
-    response = JSONResponse(content=jsonable_encoder(exercises))
-    return response
+        crud.add_tracks(db, new_tracks)
+
+    exercises_tracks = exercise.recommend_by_tracks(
+        [*available_tracks, *new_tracks], difficulty, muscle)
+
+    db_playlist = crud.create_playlist(db)
+    for exercise_track in exercises_tracks:
+        db_exercise_track = crud.create_exercise_track(
+            db, exercise_track, db_playlist.id)
+        crud.add_exercises(db, exercise_track.exercises, db_exercise_track.id)
+
+    return JSONResponse(content=jsonable_encoder({
+        "id": db_playlist.id,
+        "exercises_tracks": exercises_tracks
+    }))

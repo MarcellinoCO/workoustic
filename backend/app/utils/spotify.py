@@ -7,7 +7,13 @@ auth_manager = SpotifyClientCredentials()
 sp = Spotify(auth_manager=auth_manager)
 
 
-def fetch_tracks(tracks_id: list[str]):
+def analyze_tracks(tracks_id: list[str]):
+    """ Find and analyze tracks provided their id
+
+    Returns:
+    list[Track]: list of analyzed tracks
+    """
+
     tracks = sp.tracks(tracks_id)
     if tracks == None:
         return None
@@ -39,25 +45,18 @@ def fetch_tracks(tracks_id: list[str]):
     return analysis
 
 
-def search_track(query: str):
-    result = sp.search(f"track:{query}", limit=1)
-    if result == None:
-        return None
-
-    if result["tracks"]["total"] <= 0:
-        return None
-
-    track = result["tracks"]["items"][0]
-    return fetch_tracks([track["id"]])
-
-
 def search_tracks(queries: list[str]):
-    tracks: list[Track] = []
+    """
+    Returns: 
+    list[str]: list of tracks id
+    """
+
+    ids: list[str] = []
     for query in queries:
-        result = search_track(query)
-        if result == None:
+        search_result = sp.search(f"track:{query}", limit=1)
+        if search_result == None:
             continue
 
-        tracks += result
+        ids.append(search_result["tracks"]["items"][0]["id"])
 
-    return tracks
+    return ids
