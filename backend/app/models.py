@@ -28,3 +28,7 @@ class Exercise(BaseModel):
 class ExerciseTrack(BaseModel):
     track: Track
     exercises: list[Exercise]
+
+
+class Playlist(BaseModel):
+    exercises_tracks: list[ExerciseTrack]
