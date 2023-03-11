@@ -1,7 +1,13 @@
 from pydantic import BaseModel
 
 
+difficulties = ["beginner", "intermediate", "expert"]
+muscles = ["abdominals", "abductors", "adductors", "biceps", "calves", "chest", "forearms",
+           "glutes", "hamstrings", "lats", "lower_back", "next", "quadriceps", "traps", "triceps"]
+
+
 class Track(BaseModel):
+    id: str
     href: str
     title: str
     artist: str
