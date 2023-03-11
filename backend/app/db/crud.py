@@ -56,6 +56,19 @@ def create_exercise_track(db: Session, exercise_track: models.ExerciseTrack, pla
     return db_exercise_track
 
 
+def get_playlist(db: Session, id: int):
+    db_playlist = db.query(schemas.Playlist).filter(
+        schemas.Playlist.id == id).first()
+    if db_playlist == None:
+        return None
+
+    return models.Playlist(exercises_tracks=[
+        models.ExerciseTrack(track=models.Track(id=et.track.id, href=et.track.href, title=et.track.title, artist=et.track.artist, duration=et.track.duration, category=et.track.category),
+                             exercises=[models.Exercise(name=e.name, difficulty=e.difficulty, muscle=e.muscle, equipment=e.equipment, instructions=e.instructions)
+                                        for e in et.exercises])
+        for et in db_playlist.exercises_tracks])
+
+
 def create_playlist(db: Session):
     db_playlist = schemas.Playlist()
     db.add(db_playlist)

@@ -112,3 +112,12 @@ async def search(queries: str, difficulty: str = "beginner", muscle: str | None 
         "id": db_playlist.id,
         "exercises_tracks": exercises_tracks
     }))
+
+
+@app.get("/playlist/{id}")
+async def playlist(id: int, db: Session = Depends(get_db)):
+    playlist = crud.get_playlist(db, id)
+    if playlist == None:
+        raise HTTPException(404, "playlist not found")
+
+    return playlist
