@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  postgres:
+    container_name: workoustic-postgres
+    image: postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/data/postgres
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+    networks:
+      - workoustic
+    volumes:
+      - postgres:/data/postgres
+      # - ./populate.sql:/docker-entrypoint-initdb.d/populate.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    container_name: workoustic-pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - 5050:80
+    restart: unless-stopped
+    networks:
+      - workoustic
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+
+  backend:
+    container_name: workoustic-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SPOTIPY_CLIENT_ID=${SPOTIPY_CLIENT_ID}
+      - SPOTIPY_CLIENT_SECRET=${SPOTIPY_CLIENT_SECRET}
+      - SPOTIPY_REDIRECT_URI=${SPOTIPY_REDIRECT_URI}
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    networks:
+      - workoustic
+    volumes:
+      - ./backend:/code
+
+networks:
+  workoustic:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
