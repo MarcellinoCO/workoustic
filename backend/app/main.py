@@ -33,8 +33,8 @@ def get_db():
 
 
 @app.get("/")
-async def generate(tracks: str, difficulty: str = "beginner", muscle: str | None = None, db: Session = Depends(get_db)):
-    if len(tracks) == 0:
+async def generate(tracks: str | None = None, difficulty: str = "beginner", muscle: str | None = None, db: Session = Depends(get_db)):
+    if tracks == None or len(tracks) == 0:
         raise HTTPException(400, "parameter tracks missing")
 
     tracks = tracks.split(",")
@@ -72,8 +72,8 @@ async def generate(tracks: str, difficulty: str = "beginner", muscle: str | None
 
 
 @app.get("/search")
-async def search(queries: str, difficulty: str = "beginner", muscle: str | None = None, db: Session = Depends(get_db)):
-    if len(queries) == 0:
+async def search(queries: str | None, difficulty: str = "beginner", muscle: str | None = None, db: Session = Depends(get_db)):
+    if queries == None or len(queries) == 0:
         raise HTTPException(400, "parameter queries missing")
 
     queries = [query for query in queries.split(",") if query != "\""]
@@ -115,7 +115,10 @@ async def search(queries: str, difficulty: str = "beginner", muscle: str | None 
 
 
 @app.get("/playlist/{id}")
-async def playlist(id: int, db: Session = Depends(get_db)):
+async def playlist(id: int | None = None, db: Session = Depends(get_db)):
+    if id == None:
+        raise HTTPException(400, "path id missing")
+
     playlist = crud.get_playlist(db, id)
     if playlist == None:
         raise HTTPException(404, "playlist not found")
